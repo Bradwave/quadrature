@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Quadrature: area by counting squares</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0,0&display=block"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1 class="word" aria-label="Quadrature">
+          <span class="i">q</span><span class="i">u</span><span class="c">a</span
+          ><span class="i">d</span><span class="s">r</span><span class="i">a</span
+          ><span class="c">t</span><span class="i">u</span><span>r</span><span class="s">e</span>
+        </h1>
+        <p class="tag-line">
+          Measure an irregular area by counting the squares it covers, then see how sure you can be.
+        </p>
+      </div>
+      <button class="icon-btn" id="helpBtn" aria-label="How it works">
+        <span class="ms">help</span>
+      </button>
+    </header>
+
+    <main class="layout">
+      <section class="stage">
+        <div class="toolbar card">
+          <div class="trow">
+            <label class="sel"><select id="shapeSel" aria-label="Shape"></select></label>
+            <button class="btn ic" id="randBtn" title="Random shape" aria-label="Random shape">
+              <span class="ms">casino</span><span class="lbl">Random</span>
+            </button>
+            <button
+              class="btn ic"
+              id="photoBtn"
+              title="Shape from a photo"
+              aria-label="Shape from a photo"
+            >
+              <span class="ms">add_a_photo</span><span class="lbl">Photo</span>
+            </button>
+            <button
+              class="btn ic"
+              id="shiftBtn"
+              title="Move and rotate the shape at random"
+              aria-label="Shift the shape"
+            >
+              <span class="ms">shuffle</span><span class="lbl">Shift</span>
+            </button>
+            <button
+              class="btn ic"
+              id="trueBtn"
+              title="Show or hide the exact area"
+              aria-label="Show exact area"
+            >
+              <span class="ms" id="trueIcon">visibility_off</span
+              ><span class="lbl">Exact area</span>
+            </button>
+            <button class="btn ic mob-help" id="helpBtn2" aria-label="How it works">
+              <span class="ms">help</span>
+            </button>
+          </div>
+          <div class="trow">
+            <div class="seg tools" id="toolGroup">
+              <button class="tool on" data-tool="move" title="Drag the shape under the grid">
+                <span class="ms">pan_tool</span>Move
+              </button>
+              <button class="tool" data-tool="draw" title="Draw a new shape">
+                <span class="ms">draw</span>Draw
+              </button>
+              <button class="tool" data-tool="part" title="Add a separate part">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3.5 15a5.5 5.5 0 1 0 11 0a5.5 5.5 0 1 0-11 0z" fill="currentColor" />
+                  <path
+                    d="M18.5 2.5v8M14.5 6.5h8"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    fill="none"
+                  /></svg
+                >Part
+              </button>
+              <button class="tool" data-tool="hole" title="Cut a hole">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill-rule="evenodd"
+                    fill="currentColor"
+                    d="M12 3.5a8.5 8.5 0 1 1 0 17a8.5 8.5 0 1 1 0-17zM12 8.6a3.4 3.4 0 1 0 0 6.8a3.4 3.4 0 1 0 0-6.8z"
+                  /></svg
+                >Hole
+              </button>
+            </div>
+            <button class="btn ic" id="undoBtn" title="Undo shape change" aria-label="Undo">
+              <span class="ms">undo</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-wrap card" id="wrap">
+          <canvas id="cv" aria-label="Shape and grid"></canvas>
+          <div class="hint" id="hint"></div>
+          <div class="toast" id="toast" role="status"></div>
+          <div class="mcard card" id="mcard" hidden>
+            <div class="mtop">
+              <button class="mini" id="mBack" title="Previous square" aria-label="Previous square">
+                <span class="ms">arrow_back</span>
+              </button>
+              <div class="prog"><i id="mProg"></i></div>
+              <span id="mCount">0/0</span>
+              <span class="flag" id="mFlag" hidden>borderline</span>
+            </div>
+            <div class="mq" id="mQ"></div>
+            <div class="mopts" id="mOpts"></div>
+          </div>
+        </div>
+
+        <div class="gridbar card">
+          <div class="ctl" id="gridCtl">
+            <label for="nRange">Grid <b id="nLbl"></b></label
+            ><input type="range" id="nRange" min="0" max="9" step="1" />
+          </div>
+          <div class="ctl">
+            <label for="thrRange">Count a border square if covered ≥ <b id="thrLbl"></b></label
+            ><input type="range" id="thrRange" min="10" max="90" step="5" />
+          </div>
+          <div class="legend" id="legend">
+            <button class="lg on" data-l="in">
+              <i class="sw sw-in"></i>inside (A<sub>min</sub>)
+            </button>
+            <button class="lg on" data-l="count"><i class="sw sw-count"></i>border, counted</button>
+            <button class="lg on" data-l="skip">
+              <i class="sw sw-skip"></i>border, not counted
+            </button>
+            <button class="lg on" data-l="photo" id="lgPhoto" hidden>
+              <i
+                class="sw"
+                style="background: linear-gradient(135deg, var(--muted), var(--skip))"
+              ></i
+              >photo
+            </button>
+            <button class="lg on" data-l="lines">
+              <i class="sw sw-lines"></i>A<sub>min</sub> and A<sub>max</sub> outlines
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="tabs" role="tablist">
+          <button class="tab on" data-tab="measure" role="tab">Measure</button>
+          <button class="tab" data-tab="series" role="tab">Series <span id="sCount"></span></button>
+          <div class="seg small" id="modeSeg">
+            <button data-mode="auto" class="on">Auto</button
+            ><button data-mode="manual">Manual</button>
+          </div>
+        </div>
+
+        <div class="tabpane card" id="pane-measure">
+          <div class="mhead">
+            <div class="result">
+              <div class="rrow">
+                <span class="rlabel" id="rLabel"></span><span class="rrel" id="rRel"></span>
+              </div>
+              <div class="big" id="big"></div>
+              <div class="rsub" id="rsub"></div>
+            </div>
+            <svg
+              class="minil"
+              id="mini"
+              viewBox="0 0 400 34"
+              role="img"
+              aria-label="Uncertainty interval on a fixed scale"
+            ></svg>
+            <div id="headSlot"></div>
+          </div>
+          <svg class="plot" id="nl" viewBox="0 0 400 108" role="img" aria-label="Number line"></svg>
+          <div id="mBody"></div>
+          <div class="actions" id="mActions"></div>
+        </div>
+
+        <div class="tabpane card" id="pane-series" hidden>
+          <div class="srun">
+            <label class="num"
+              >Repeat <input id="nRuns" type="number" min="2" max="2000" value="100" /> times</label
+            >
+            <label class="chk"><input type="checkbox" id="rotChk" checked /> rotate too</label>
+            <button class="btn primary" id="runBtn">
+              <span class="ms">play_arrow</span><span>Run</span>
+            </button>
+          </div>
+          <p class="note">
+            Each run moves the shape under the grid and counts again automatically. To add a manual
+            count, finish it in the Measure tab and record it.
+          </p>
+          <div class="seg small" id="varSeg">
+            <button data-v="est" class="on">A<sub>est</sub></button><button data-v="avg">Ā</button
+            ><button data-v="min">A<sub>min</sub></button
+            ><button data-v="max">A<sub>max</sub></button>
+          </div>
+          <svg class="plot" id="hist" viewBox="0 0 400 200" role="img" aria-label="Histogram"></svg>
+          <svg
+            class="plot"
+            id="strip"
+            viewBox="0 0 400 92"
+            role="img"
+            aria-label="Distribution on a number line"
+          ></svg>
+          <div class="ssum" id="sSummary"></div>
+          <div class="tblwrap"><table class="stats" id="sTbl"></table></div>
+          <div class="actions">
+            <button class="btn" id="copyBtn"><span class="ms">content_copy</span>Copy CSV</button>
+            <button class="btn" id="clearBtn"><span class="ms">delete</span>Clear series</button>
+          </div>
+          <textarea id="csvOut" hidden readonly aria-label="CSV data"></textarea>
+        </div>
+      </aside>
+    </main>
+
+    <dialog id="photoDlg" class="pdlg" aria-label="Shape from a photo">
+      <div class="phead">
+        <h2>Shape from a photo</h2>
+        <button class="icon-btn" id="phClose" aria-label="Close">
+          <span class="ms">close</span>
+        </button>
+      </div>
+      <div class="pbody">
+        <div class="pview">
+          <canvas id="phCv" aria-label="Photo preview"></canvas>
+          <div class="pempty" id="phEmpty">
+            <div>
+              <label class="btn primary" for="phFile"
+                ><span class="ms">add_a_photo</span>Choose or take a photo</label
+              >
+              <p>
+                Best results: a dark shape on light paper (or the reverse), even light, taken from
+                straight above, with a ruler or a known length lying next to the shape.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="pctl">
+          <input type="file" accept="image/*" id="phFile" class="vh" />
+          <h3>1. Photo</h3>
+          <label class="btn" for="phFile"><span class="ms">image</span>Choose another photo</label>
+          <fieldset id="phSteps" disabled>
+            <h3>2. Find the shape</h3>
+            <div class="ctl">
+              <label for="phThr">Threshold <b id="phThrLbl">128</b></label
+              ><input type="range" id="phThr" min="0" max="255" step="1" value="128" />
+            </div>
+            <div class="prow">
+              <span class="plbl">The shape is</span>
+              <div class="seg small" id="phTone">
+                <button data-v="dark" class="on">darker</button
+                ><button data-v="light">lighter</button>
+              </div>
+            </div>
+            <div class="prow">
+              <span class="plbl">Keep</span>
+              <div class="seg small" id="phKeep">
+                <button data-v="all" class="on">all regions</button
+                ><button data-v="largest">largest only</button>
+              </div>
+            </div>
+            <label class="chk"
+              ><input type="checkbox" id="phEdge" checked /> ignore regions touching the photo's
+              edge</label
+            >
+            <label class="chk"
+              ><input type="checkbox" id="phShowMask" checked /> tint the detected area</label
+            >
+            <p class="note" id="phFound"></p>
+            <h3>3. Set the scale</h3>
+            <p class="note">
+              Mark both ends of a length you know, for example 10 cm on a ruler, then type it. Drag
+              the round handles to adjust. The ruler must lie in the same plane as the shape.
+            </p>
+            <div class="prow">
+              <button class="btn" id="phMark" type="button">
+                <span class="ms">straighten</span><span>Mark a known length</span>
+              </button>
+              <label class="num"
+                >is
+                <input
+                  type="number"
+                  id="phDist"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  placeholder="10"
+                />
+                cm</label
+              >
+            </div>
+            <p class="note" id="phScale"></p>
+            <div class="actions">
+              <button class="btn primary" id="phUse" type="button" disabled>
+                <span class="ms">check</span>Use this shape
+              </button>
+            </div>
+          </fieldset>
+          <p class="note pmsg" id="phMsg" role="status"></p>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="help">
+      <div class="word dlg-word" aria-hidden="true">
+        <span class="i">q</span><span class="i">u</span><span class="c">a</span
+        ><span class="i">d</span><span class="s">r</span><span class="i">a</span
+        ><span class="c">t</span><span class="i">u</span><span>r</span><span class="s">e</span>
+      </div>
+      <h2>How it works</h2>
+      <p>
+        A grid of squares of side <i>s</i> lies over the shape. Each square is classified by how
+        much of it the shape covers.
+      </p>
+      <ul>
+        <li>
+          <b>A<sub>min</sub></b
+          >: squares entirely inside the shape.
+        </li>
+        <li>
+          <b>A<sub>border</sub></b
+          >: squares crossed by the border.
+        </li>
+        <li>
+          <b>A<sub>max</sub> = A<sub>min</sub> + A<sub>border</sub></b
+          >: squares needed to contain the shape.
+        </li>
+        <li>
+          <b>Ā = (A<sub>min</sub> + A<sub>max</sub>)/2</b> and
+          <b>δ = (A<sub>max</sub> − A<sub>min</sub>)/2</b> (semi-dispersion). Result: Ā ± δ.
+        </li>
+        <li>
+          <b>A<sub>est</sub></b
+          >: inside squares plus border squares covered at least as much as the threshold (50% by
+          default).
+        </li>
+      </ul>
+      <h3>Shapes</h3>
+      <p>
+        Pick a shape, roll a random one, or draw your own. <b>Draw</b> replaces the shape,
+        <b>Part</b> adds a separate piece (outside the shape or inside a hole), <b>Hole</b> cuts a
+        hole (draw it inside the shape). A border can never cross itself or another border: strokes
+        that would cross are refused.
+      </p>
+      <h3>Manual mode</h3>
+      <p>
+        The view zooms to each border square in turn and you decide whether it counts. Borderline
+        squares (shape covering less than 5% or more than 95%) also ask whether they belong to A<sub
+          >min</sub
+        >
+        or A<sub>max</sub> at all. Keys: <kbd>Y</kbd>/<kbd>Enter</kbd> count, <kbd>N</kbd> skip,
+        <kbd>I</kbd> inside, <kbd>O</kbd> outside, <kbd>←</kbd> back. When you finish, crosses mark
+        the squares where you disagree with the automatic count.
+      </p>
+      <h3>Exact area</h3>
+      <p>
+        The app knows the exact area of the shape (computed from its outline). It stays hidden so
+        you can measure without knowing the answer. The eye button reveals it in purple: as A<sub
+          >true</sub
+        >
+        in the table, as a purple line on the number line and on the series plots. Comparing it with
+        the mean of many measurements shows whether a counting rule has a systematic error.
+      </p>
+      <h3>Series</h3>
+      <p>
+        Repeat the measurement with the shape in new positions. The histogram compares the spread of
+        the results with a Gaussian of the same mean and standard deviation.
+      </p>
+      <div class="actions"><button class="btn primary" id="helpClose">Close</button></div>
+    </dialog>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
